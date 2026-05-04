@@ -1,0 +1,86 @@
+services:
+
+  owncloud:
+    image: owncloud/server:latest
+    container_name: owncloud
+    restart: unless-stopped
+    ports:
+      - "9900:8080"
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - OWNCLOUD_DOMAIN=localhost:9900    # IP:9900| example.com
+      - OWNCLOUD_TRUSTED_DOMAINS=localhost    # IP | example.com
+      - OWNCLOUD_DB_TYPE=mysql
+      - OWNCLOUD_DB_NAME=owncloud
+      - OWNCLOUD_DB_USERNAME=owncloud
+      - OWNCLOUD_DB_PASSWORD=owncloud
+      - OWNCLOUD_DB_HOST=mariadb
+      - OWNCLOUD_ADMIN_USERNAME=admin
+      - OWNCLOUD_ADMIN_PASSWORD=admin
+      - OWNCLOUD_MYSQL_UTF8MB4=true
+      - OWNCLOUD_REDIS_ENABLED=true
+      - OWNCLOUD_REDIS_HOST=redis
+    volumes:
+      - ./files:/mnt/data
+
+  mariadb:
+    image: mariadb:latest
+    container_name: owncloud_db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=owncloud
+      - MYSQL_USER=owncloud
+      - MYSQL_PASSWORD=owncloud
+      - MYSQL_DATABASE=owncloud
+    command: ["--max-allowed-packet=128M", "--innodb-log-file-size=64M"]
+    volumes:
+      - ./mysql:/var/lib/mysql
+
+  redis:
+    image: redis:6
+    container_name: owncloud_redis
+    restart: unless-stopped
+    command: ["--databases", "1"]
+    volumes:
+      - ./redis:/data
+      
+  onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: onlyoffice
+    restart: unless-stopped    
+    ports:
+      - "9920:80"
+    environment:
+      - ALLOW_PRIVATE_IP_ADDRESS=true
+      - USE_UNAUTHORIZED_STORAGE=true
+      - JWT_ENABLED=true
+      - JWT_SECRET=my_secret
+
+  euro-office:
+    image: ghcr.io/euro-office/documentserver:latest
+    container_name: euro-office
+    restart: unless-stopped
+    ports:
+      - "9940:80"
+    environment:
+      - ALLOW_PRIVATE_IP_ADDRESS=true
+      - USE_UNAUTHORIZED_STORAGE=true
+      - JWT_ENABLED=true
+      - JWT_SECRET=my_secret
+      - THEME=euro-office
+
+  collabora:
+    image: collabora/code:latest
+    container_name: collabora
+    ports:
+      - "9980:9980"
+    restart: unless-stopped
+    environment:
+      - extra_params=--o:ssl.enable=false
+      - domain=localhost  # IP | example.com
+      - username=User
+      - password=p4ssw0rd
+      - dictionaries=es_ES
+      - TZ=Europe/Madrid 
