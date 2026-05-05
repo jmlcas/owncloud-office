@@ -45,11 +45,11 @@ services:
     command: ["--databases", "1"]
     volumes:
       - ./redis:/data
-      
+
   onlyoffice:
     image: onlyoffice/documentserver:latest
     container_name: onlyoffice
-    restart: unless-stopped    
+    restart: unless-stopped
     ports:
       - "9920:80"
     environment:
